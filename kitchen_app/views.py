@@ -1,5 +1,6 @@
 from django.shortcuts import render,redirect
 from django.http import JsonResponse
+import joblib
 from .models import KitchenData,Lamp,Fan
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
@@ -22,7 +23,13 @@ from load_model import meal_predictor
 
 # Create your views here.
 # http://127.0.0.1:8000/chart_data_api/?temperature=15&gas_level=16&humidity=18&flame=1
-
+model_path = 'kitchen_app/ml_models/models/meal_predictor.joblib'
+try:
+    meal_predictor = joblib.load(model_path)
+    print("Loaded model from:", model_path)
+except Exception as e:
+    print(f"Error loading model: {e}")
+    exit()
 
 # Toggle view for Lamp
 @require_POST
