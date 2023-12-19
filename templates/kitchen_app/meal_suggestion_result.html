@@ -1,0 +1,9 @@
+<!-- meal_suggestion_result.html -->
+<h2>Top Meal Suggestions:</h2>
+<ul>
+  {% for meal in top_meals %}
+    <li>{{ meal.name }} - {{ meal.category.name }}</li>
+  {% endfor %}
+</ul>
+
+<p>{{ other_info }}</p>

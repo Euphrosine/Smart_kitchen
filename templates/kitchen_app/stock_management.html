@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen Stock Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            background-color: rgb(175, 135, 60);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+        }
+
+        main {
+            width: 100%;
+            max-width: 800px;
+            margin-top: 80px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            flex: 1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #dee2e6;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: rgb(175, 135, 60);
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        select,
+        input,
+        button {
+            margin-top: 10px;
+            padding: 8px;
+        }
+
+        button {
+            background-color: #303131;
+            color: white;
+            cursor: pointer;
+        }
+
+        .ingredient-checkbox {
+            margin-top: 5px;
+        }
+
+        .predicted-table {
+            margin-top: 40px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Kitchen Stock Management</h1>
+    </header>
+
+    <main>
+        <h2>Choose a Meal category to Prepare</h2>
+        <select id="categorySelect" onchange="updateIngredientStock()">
+            <!-- Categories will be dynamically populated here -->
+        </select>
+
+        <h2>Ingredients for the Selected Meal</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ingredient</th>
+                    <th>Check to Select</th>
+                </tr>
+            </thead>
+            <tbody id="ingredientTableBody">
+                <!-- Ingredients will be dynamically populated here -->
+            </tbody>
+        </table>
+        <button onclick="predictMeals()">Get suggested meals</button>
+
+        <div class="predicted-table">
+            <h2>Predicted Top Meals</h2>
+            <div id="loadingSpinner" style="display: none;">Loading...</div>
+            <table id="predictedMealsTable">
+                <thead>
+                    <tr>
+                        <th>Meal</th>
+                        <th>Ingredients</th>
+                        <th>Category</th>
+                    </tr>
+                </thead>
+                <tbody id="predictedMealsBody">
+                    <!-- Predicted meals and ingredients will be dynamically populated here -->
+                </tbody>
+            </table>
+            <div id="enjoyMessage" style="display: none;">Enjoy! 🎉</div>
+        </div>
+
+        <script>
+            async function fetchCategories() {
+                try {
+                    const response = await fetch("/api/categories");
+                    const categories = await response.json();
+                    return categories;
+                } catch (error) {
+                    console.error('Error:', error);
+                    return [];
+                }
+            }
+
+            async function fetchIngredientsByCategory(categoryId) {
+                try {
+                    const response = await fetch(`/api/ingredients/${categoryId}/`);
+                    const ingredients = await response.json();
+                    return ingredients;
+                } catch (error) {
+                    console.error('Error:', error);
+                    return [];
+                }
+            }
+
+            async function updateIngredientStock() {
+                const selectedCategory = document.getElementById('categorySelect').value;
+                const ingredientsTableBody = document.getElementById('ingredientTableBody');
+                ingredientsTableBody.innerHTML = '';
+
+                const ingredients = await fetchIngredientsByCategory(selectedCategory);
+
+                ingredients.forEach(ingredient => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${ingredient.name}</td>
+                        <td><input type="checkbox" class="ingredient-checkbox" id="${ingredient.name}Checkbox"></td>
+                    `;
+                    ingredientsTableBody.appendChild(row);
+                });
+            }
+
+            async function initializePage() {
+                const categorySelect = document.getElementById('categorySelect');
+                const categories = await fetchCategories();
+
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = category.name;
+                    categorySelect.appendChild(option);
+                });
+
+                updateIngredientStock();
+            }
+
+            function getSelectedIngredients() {
+                const checkboxes = document.querySelectorAll('.ingredient-checkbox');
+                const selectedIngredients = [];
+
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        selectedIngredients.push(checkbox.id.replace('Checkbox', ''));
+                    }
+                });
+
+                return selectedIngredients;
+            }
+
+            function displayPredictedMeals(meals) {
+                
+                const predictedMealsBody = document.getElementById('predictedMealsBody');
+                predictedMealsBody.innerHTML = '';
+                // Check if meals is an object
+                if (typeof meals === 'object' && meals !== null) {
+                    // Iterate over the object properties
+                    Object.entries(meals).forEach(([mealName, mealDetails]) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                <td>${mealName}</td>
+                <td>${mealDetails.ingredients.join(', ')}</td>
+                <td>${mealDetails.category}</td>
+            `;
+                        predictedMealsBody.appendChild(row);
+                    });
+                }
+            }
+
+            async function predictMeals() {
+                const selectedIngredients = getSelectedIngredients();
+                const loadingSpinner = document.getElementById('loadingSpinner');
+                const enjoyMessage = document.getElementById('enjoyMessage');
+                const predictedMealsBody = document.getElementById('predictedMealsBody');
+
+                // Show loading spinner
+                loadingSpinner.style.display = 'block';
+                enjoyMessage.style.display = 'none';
+
+                const response = await fetch('/predict-meal/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}',  // Include the CSRF token
+                    },
+                    body: `ingredients=${encodeURIComponent(selectedIngredients.join(','))}`,
+                });
+
+                const result = await response.json();
+
+                // Hide loading spinner
+                loadingSpinner.style.display = 'none';
+
+                // Display predicted meals
+                displayPredictedMeals(result.top_meals);
+
+                // Show enjoy message
+                enjoyMessage.style.display = 'block';
+            }
+            initializePage();
+        </script>
+    </main>
+
+</body>
+
+</html>

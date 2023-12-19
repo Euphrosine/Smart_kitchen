@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% block content %}
+<br>
+<h4 id="latest_entry">Latest Entry</h4>
+<br><br>
+<div class="row">
+    <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+      <div class="card">
+        <div class="card-header p-3 pt-2">
+          <div class="icon icon-lg icon-shape bg-gradient-dark shadow-dark text-center border-radius-xl mt-n4 position-absolute">
+            <i class="material-icons opacity-10">Temp</i>
+          </div>
+          <div class="text-end pt-1">
+            <p class="text-sm mb-0 text-capitalize">Latest Temperature</p>
+            <h4 class="mb-0" id="latest_temp"></h4>
+          </div>
+          <hr class="dark horizontal my-0">
+          <div class="card-footer p-3">
+          </div>
+        </div>
+        <hr class="dark horizontal my-0">
+      </div>
+    </div>
+    <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+      <div class="card">
+        <div class="card-header p-3 pt-2">
+          <div class="icon icon-lg icon-shape  shadow-primary text-center border-radius-xl mt-n4 position-absolute" style="background-color: rgb(175, 135, 60);">
+            <i class="material-icons opacity-10">Gas</i>
+          </div>
+          <div class="text-end pt-1">
+            <p class="text-sm mb-0 text-capitalize">Latest Gas Level</p>
+            <h4 class="mb-0" id="latest_gas"></h4>
+          </div>
+        </div>
+        <hr class="dark horizontal my-0">
+        <div class="card-footer p-3">
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+      <div class="card">
+        <div class="card-header p-3 pt-2">
+          <div class="icon icon-lg icon-shape bg-gradient-dark shadow-dark text-center border-radius-xl mt-n4 position-absolute">
+            <i class="material-icons opacity-10">Hum</i>
+          </div>
+          <div class="text-end pt-1">
+            <p class="text-sm mb-0 text-capitalize">Humididty</p>
+            <h4 class="mb-0" id="latest_humidity"></h4>
+          </div>
+        </div>
+        <hr class="dark horizontal my-0">
+        <div class="card-footer p-3">
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+      <div class="card">
+        <div class="card-header p-3 pt-2">
+          <div class="icon icon-lg icon-shape bg-gradient-dark shadow-dark text-center border-radius-xl mt-n4 position-absolute">
+            <i class="material-icons opacity-10">Flame</i>
+          </div>
+          <div class="text-end pt-1">
+            <p class="text-sm mb-0 text-capitalize">Latest Flame</p>
+            <h4 class="mb-0" id="latest_flame"></h4>
+          </div>
+        </div>
+        <hr class="dark horizontal my-0">
+        <div class="card-footer p-3">
+        </div>
+      </div>
+    </div>
+
+<div class="container mt-5">
+    <h4 id="kitchen_data">Kitchen Data</h4>
+    <table class="table table-bordered">
+        <thead style=" background-color: rgb(223, 179, 98);">
+            <tr>
+                <th>DateTime</th>
+                <th>Temperature</th>
+                <th>Gas Level</th>
+                <th>Humidity</th>
+                <th>Flame</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in kitchen_data %}
+                <tr>
+                    <td>{{ entry.datetime }}</td>
+                    <td>{{ entry.temperature }}</td>
+                    <td>{{ entry.gas_level }}</td>
+                    <td>{{ entry.humidity }}</td>
+                    <td>{{ entry.flame }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table><br><br>
+<h4 id="kitchen_chart">Kitchen Chart</h4>
+<canvas id="kitchenChart" width="600" height="300"></canvas>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var ctx = document.getElementById('kitchenChart').getContext('2d');
+
+        var data = {
+            labels: [{% for entry in kitchen_data %}'{{ entry.datetime }}',{% endfor %}],
+            datasets: [
+                {
+                    label: 'Temperature',
+                    data: [{% for entry in kitchen_data %}{{ entry.temperature }},{% endfor %}],
+                    borderColor: 'rgb(37,37,39)',
+                    borderWidth: 1,
+                    fill: false
+                },
+                {
+                    label: 'Gas Level',
+                    data: [{% for entry in kitchen_data %}{{ entry.gas_level }},{% endfor %}],
+                    borderColor: 'rgb(255, 51, 0)',
+                    borderWidth: 1,
+                    fill: false
+                },
+                {
+                    label: 'Humidity',
+                    data: [{% for entry in kitchen_data %}{{ entry.humidity }},{% endfor %}],
+                    borderColor: 'rgb(153, 0, 0)',
+                    borderWidth: 1,
+                    fill: false
+                }, // Missing comma here
+            ]
+        };
+
+        var options = {
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'day'
+                    }
+                },
+                y: {
+                    beginAtZero: true
+                }
+            }
+        };
+
+        var chart = new Chart(ctx, {
+            type: 'line',
+            data: data,
+            options: options
+        });
+    });
+</script>
+
+  
+    
+</div>  
+
+<!-- upadate latest entry in card -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var table = document.querySelector('.table');
+        var lastRow = table.rows[table.rows.length - 1];
+    
+        document.querySelector('#latest_temp').textContent = lastRow.cells[1].textContent;
+        document.querySelector('#latest_gas').textContent = lastRow.cells[2].textContent;
+        document.querySelector('#latest_humidity').textContent = lastRow.cells[3].textContent;
+        document.querySelector('#latest_flame').textContent = lastRow.cells[4].textContent;
+
+    });
+    </script>
+{% endblock %}

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select Category</title>
+</head>
+<body>
+    <h2>Select Category</h2>
+    <form method="post" action="{% url 'select_category' %}">
+        {% csrf_token %}
+        <label for="category">Select Category:</label>
+        <select name="category" id="category">
+            {% for category in categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Select</button>
+    </form>
+</body>
+</html>

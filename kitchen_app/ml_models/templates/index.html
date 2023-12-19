@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Prediction</title>
+</head>
+<body>
+    <h1>Meal Prediction</h1>
+    
+    {% if error_message %}
+        <p style="color: red;">{{ error_message }}</p>
+    {% endif %}
+
+    <form action="/predict" method="post" enctype="multipart/form-data">
+        <label for="category">Choose a category:</label>
+        <select name="category" required>
+            {% for category in valid_categories %}
+                <option value="{{ category }}">{{ category }}</option>
+            {% endfor %}
+        </select>
+
+        <br><br>
+
+        <label for="ingredientFile">Upload CSV file with available ingredients:</label>
+        <input type="file" name="ingredientFile" accept=".csv" required>
+
+        <br><br>
+
+        <input type="submit" value="Predict">
+    </form>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!-- meal_suggestion.html -->
+<form method="post" action="{% url 'meal_suggestion' %}">
+    {% csrf_token %}
+    <label for="category">Select Category:</label>
+    <select name="category" id="category">
+      {% for category in categories %}
+        <option value="{{ category.id }}">{{ category.name }}</option>
+      {% endfor %}
+    </select>
+  
+    <label for="ingredients">Select Ingredients:</label>
+    <select name="ingredients" id="ingredients" multiple>
+      {% for ingredient in category.ingredients.all %}
+        <option value="{{ ingredient.id }}">{{ ingredient.name }}</option>
+      {% endfor %}
+    </select>
+  
+    <button type="submit">Get Meal Suggestions</button>
+  </form>
+  
